@@ -5,7 +5,7 @@ import { useApp } from '../../stores';
 import { Modal } from '../../components/common/Modal';
 
 export interface AdminServicesPageProps {
-  onNavigate: (route: RoutePath, params?: { serviceId?: string }) => void;
+  onNavigate: (route: RoutePath, params?: { vehicleId?: string; serviceId?: string; dealerId?: string }) => void;
 }
 
 export const AdminServicesPage: React.FC<AdminServicesPageProps> = ({ onNavigate }) => {

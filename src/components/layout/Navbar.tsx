@@ -221,6 +221,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
 
                   {/* Links */}
+                  {role === 'admin' && (
+                    <button
+                      type="button"
+                      onClick={() => handleNavClick('admin')}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs font-headline font-semibold text-[#ffb3b6] hover:text-white bg-[#e11d48]/15 hover:bg-[#e11d48]/25 border border-[#e11d48]/30 text-left transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[18px] text-[#e11d48]">
+                        admin_panel_settings
+                      </span>
+                      <span>Director Admin Console</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => handleNavClick('dashboard')}
@@ -381,6 +394,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="pt-3 border-t border-white/8 flex flex-col gap-2">
+            {role === 'admin' && (
+              <button
+                type="button"
+                onClick={() => handleNavClick('admin')}
+                className="w-full flex items-center justify-between p-2.5 rounded-sm bg-[#e11d48]/15 border border-[#e11d48]/30 text-xs font-headline font-semibold text-[#ffb3b6] hover:text-white"
+              >
+                <span>Director Admin Console</span>
+                <span className="material-symbols-outlined text-[18px] text-[#e11d48]">admin_panel_settings</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => handleNavClick('dashboard')}

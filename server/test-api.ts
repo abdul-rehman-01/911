@@ -286,11 +286,123 @@ async function runTests() {
     return res.status === 404 && json.success === false && json.error.code === 'ROUTE_NOT_FOUND';
   });
 
+  console.log('\n--- 9. PHASE 8 ADMIN PANEL & AUTHORIZATION VERIFICATION ---');
+
+  // 21. Admin stats without auth returns 401
+  await check('GET /api/v1/admin/stats without auth headers returns 401 UNAUTHORIZED', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/admin/stats`);
+    const json = await res.json();
+    return res.status === 401 && json.success === false && json.error.code === 'UNAUTHORIZED';
+  });
+
+  // 22. Admin stats with non-admin user returns 403
+  await check('GET /api/v1/admin/stats with member token returns 403 FORBIDDEN', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/admin/stats`, {
+      headers: { 'x-user-id': 'user-demo-member' },
+    });
+    const json = await res.json();
+    return res.status === 403 && json.success === false && json.error.code === 'FORBIDDEN';
+  });
+
+  // 23. Admin stats with admin token returns 200 and stats payload
+  await check('GET /api/v1/admin/stats with admin clearance returns 200 OK and metrics', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/admin/stats`, {
+      headers: { 'x-user-id': 'user-demo-admin' },
+    });
+    const json = await res.json();
+    return (
+      res.status === 200 &&
+      json.success === true &&
+      typeof json.data.catalog.totalVehicles === 'number' &&
+      typeof json.data.operations.totalBookings === 'number'
+    );
+  });
+
+  // 24. Public access to Brands
+  await check('GET /api/v1/brands returns catalog marques', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/brands`);
+    const json = await res.json();
+    return res.status === 200 && json.success === true && Array.isArray(json.data) && json.data.length > 0;
+  });
+
+  // 25. Unauthorized Brand Creation returns 403
+  await check('POST /api/v1/brands as member returns 403 FORBIDDEN', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/brands`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-id': 'user-demo-member' },
+      body: JSON.stringify({ name: 'Koenigsegg', country: 'Sweden' }),
+    });
+    return res.status === 403;
+  });
+
+  // 26. Authorized Brand Creation returns 201
+  await check('POST /api/v1/brands as admin returns 201 CREATED', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/brands`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-id': 'user-demo-admin' },
+      body: JSON.stringify({ name: 'Koenigsegg', country: 'Sweden' }),
+    });
+    const json = await res.json();
+    return res.status === 201 && json.success === true && json.data.name === 'Koenigsegg';
+  });
+
+  // 27. Public access to Categories
+  await check('GET /api/v1/categories returns chassis classes', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/categories`);
+    const json = await res.json();
+    return res.status === 200 && json.success === true && Array.isArray(json.data) && json.data.length > 0;
+  });
+
+  // 28. Authorized Category Creation returns 201
+  await check('POST /api/v1/categories as admin returns 201 CREATED', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-id': 'user-demo-admin' },
+      body: JSON.stringify({ name: 'Speedster', description: 'Lightweight low-windshield roadster' }),
+    });
+    const json = await res.json();
+    return res.status === 201 && json.success === true && json.data.name === 'Speedster';
+  });
+
+  // 29. Authorized Vehicle Creation returns 201
+  await check('POST /api/v1/vehicles as admin creates vehicle in catalog', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/vehicles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-id': 'user-demo-admin' },
+      body: JSON.stringify({
+        make: 'Porsche',
+        model: '911 S/T Heritage',
+        year: 2024,
+        priceUsd: 290000,
+        trim: 'Heritage Design',
+      }),
+    });
+    const json = await res.json();
+    return res.status === 201 && json.success === true && json.data.model === '911 S/T Heritage';
+  });
+
+  // 30. Authorized User Management list returns 200
+  await check('GET /api/v1/users as admin lists accredited accounts', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/users`, {
+      headers: { 'x-user-id': 'user-demo-admin' },
+    });
+    const json = await res.json();
+    return res.status === 200 && json.success === true && Array.isArray(json.data) && json.data.length >= 2;
+  });
+
+  // 31. Unauthorized User Management list returns 403
+  await check('GET /api/v1/users as member returns 403 FORBIDDEN', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/users`, {
+      headers: { 'x-user-id': 'user-demo-member' },
+    });
+    return res.status === 403;
+  });
+
   server.close();
   await closePool();
 
   console.log('\n=====================================================');
-  console.log(`  PHASE 7 TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
+  console.log(`  CAR 911 FULL INTEGRATION TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
   console.log('=====================================================');
 
   if (failed > 0) {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './stores';
 import { Layout } from './components/layout/Layout';
+import { AdminLayout } from './components/admin/AdminLayout';
 import {
   HomePage,
   ExploreCarsPage,
@@ -16,6 +17,16 @@ import {
   AboutPage,
   ContactPage,
   NotFoundPage,
+  AdminDashboardPage,
+  AdminVehiclesPage,
+  AdminBrandsPage,
+  AdminCategoriesPage,
+  AdminServicesPage,
+  AdminDealersPage,
+  AdminUsersPage,
+  AdminBookingsPage,
+  AdminMessagesPage,
+  AdminAccessDeniedPage,
 } from './pages';
 import { Button } from './components/common/Button';
 import { Modal } from './components/common/Modal';
@@ -40,7 +51,56 @@ function AppContent() {
 
   const [diagnosticOpen, setDiagnosticOpen] = useState(false);
 
-  // Render Core and Phase 4 Pages according to currentRoute
+  // Check if current active route belongs to the administrative suite
+  const isAdminRoute = currentRoute === 'admin' || currentRoute.startsWith('admin/');
+
+  // If attempting to access an admin route without director clearance:
+  if (isAdminRoute && session.role !== 'admin') {
+    return <AdminAccessDeniedPage onNavigate={navigateTo} />;
+  }
+
+  // Render Admin Panels
+  if (isAdminRoute && session.role === 'admin') {
+    const renderAdminPage = () => {
+      switch (currentRoute) {
+        case 'admin':
+          return <AdminDashboardPage onNavigate={navigateTo} />;
+        case 'admin/vehicles':
+          return <AdminVehiclesPage onNavigate={navigateTo} />;
+        case 'admin/brands':
+          return <AdminBrandsPage onNavigate={navigateTo} />;
+        case 'admin/categories':
+          return <AdminCategoriesPage onNavigate={navigateTo} />;
+        case 'admin/services':
+          return <AdminServicesPage onNavigate={navigateTo} />;
+        case 'admin/dealers':
+          return <AdminDealersPage onNavigate={navigateTo} />;
+        case 'admin/users':
+          return <AdminUsersPage onNavigate={navigateTo} />;
+        case 'admin/bookings':
+          return <AdminBookingsPage onNavigate={navigateTo} />;
+        case 'admin/messages':
+          return <AdminMessagesPage onNavigate={navigateTo} />;
+        default:
+          return <AdminDashboardPage onNavigate={navigateTo} />;
+      }
+    };
+
+    return (
+      <AdminLayout
+        currentRoute={currentRoute}
+        onNavigate={navigateTo}
+        session={session}
+        onLogout={logout}
+        toast={toast}
+        onDismissToast={dismissToast}
+      >
+        {renderAdminPage()}
+      </AdminLayout>
+    );
+  }
+
+  // Public Showroom and Member Pages
   const renderCurrentPage = () => {
     switch (currentRoute) {
       case 'home':
@@ -76,7 +136,7 @@ function AppContent() {
     }
   };
 
-  const allRoutes: { route: RoutePath; label: string }[] = [
+  const publicRoutes: { route: RoutePath; label: string }[] = [
     { route: 'home', label: 'Home' },
     { route: 'explore-cars', label: 'Explore Cars' },
     { route: 'vehicle-details', label: 'Vehicle Details' },
@@ -91,6 +151,18 @@ function AppContent() {
     { route: 'about', label: 'About' },
     { route: 'contact', label: 'Contact' },
     { route: 'not-found', label: '404 Off-Track' },
+  ];
+
+  const adminRoutes: { route: RoutePath; label: string }[] = [
+    { route: 'admin', label: 'Admin Dashboard' },
+    { route: 'admin/vehicles', label: 'Admin Vehicles' },
+    { route: 'admin/brands', label: 'Admin Brands' },
+    { route: 'admin/categories', label: 'Admin Categories' },
+    { route: 'admin/services', label: 'Admin Services' },
+    { route: 'admin/dealers', label: 'Admin Dealers' },
+    { route: 'admin/users', label: 'Admin Users' },
+    { route: 'admin/bookings', label: 'Admin Bookings' },
+    { route: 'admin/messages', label: 'Admin Messages' },
   ];
 
   return (
@@ -123,7 +195,7 @@ function AppContent() {
       <Modal
         isOpen={diagnosticOpen}
         onClose={() => setDiagnosticOpen(false)}
-        title="Car 911 Phase 4 Diagnostics & State Console"
+        title="Car 911 Phase 8 Diagnostics & State Console"
         subtitle="Live Platform Inspector"
         maxWidth="lg"
       >
@@ -182,12 +254,40 @@ function AppContent() {
             </div>
           </div>
 
+          {/* Admin Navigation Shortcut if Authorized */}
+          {session.role === 'admin' && (
+            <div className="flex flex-col gap-2 pt-2 border-t border-[#e11d48]/20 bg-[#e11d48]/5 p-2 rounded-xs">
+              <span className="text-[#ffb3b6] uppercase text-[10px] font-bold">
+                Admin Console Direct Links (Level 1 Clearance):
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                {adminRoutes.map((r) => (
+                  <button
+                    key={r.route}
+                    type="button"
+                    onClick={() => {
+                      navigateTo(r.route);
+                      setDiagnosticOpen(false);
+                    }}
+                    className={`p-1.5 rounded-sm text-center transition-colors text-[11px] truncate ${
+                      currentRoute === r.route
+                        ? 'bg-[#e11d48] text-white font-bold'
+                        : 'bg-[#1e2024] hover:bg-[#282a2e] text-[#ffb3b6] hover:text-white border border-[#e11d48]/30'
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
             <span className="text-[#b9c8de] uppercase text-[10px]">
-              Direct Page Jump ({allRoutes.length} Pages Implemented):
+              Direct Showroom Jump:
             </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pr-1">
-              {allRoutes.map((r) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-40 overflow-y-auto pr-1">
+              {publicRoutes.map((r) => (
                 <button
                   key={r.route}
                   type="button"

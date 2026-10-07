@@ -540,8 +540,53 @@ If network connectivity is disrupted or the backend is operating in standalone m
 
 ---
 
-## 5. Phase 7 Preparation
+## 5. PostgreSQL & Drizzle Database Layer (Phase 7)
 
-The data layer is prepared for immediate migration to PostgreSQL:
-- `DATABASE_URL` environment variable is defined in `.env.example` and parsed in `server/src/config/env.ts`.
-- Repositories (`VehicleRepository`, `BookingRepository`, `UserRepository`, etc.) isolate data querying logic behind standardized asynchronous interfaces (`findAll`, `findById`, `create`, `update`, `delete`), requiring zero changes to controllers or client services when migrating to Drizzle ORM in Phase 7.
+The data layer is integrated with PostgreSQL and Drizzle ORM:
+- Connection pooling and graceful shutdown configured in `server/src/db/index.ts`.
+- 15 relational tables with strict foreign keys, indexes, cascades, and constraints configured in `server/src/db/schema.ts`.
+- Safe idempotent seed engine (`server/src/db/seed.ts`) with salted password hashing.
+
+---
+
+## 6. Phase 8 Admin Panel & Management APIs
+
+The Car 911 Operations Console introduces administrative endpoints protected by server-authoritative clearance verification (`server/src/middleware/auth.ts`).
+
+### 6.1 Admin Authorization Model
+- Requests must include an authenticated identity via `x-user-id` header or `Authorization: Bearer <user-id>`.
+- The middleware queries the server `userRepository` to verify that `user.role === 'admin'`.
+- Client-supplied `role=admin` in body or query parameters is strictly ignored and untrusted.
+- Non-admin or unauthenticated requests are rejected with `401 UNAUTHORIZED` or `403 FORBIDDEN`.
+
+### 6.2 Administrative Endpoints Summary
+
+| Endpoint | Method | Clearance | Description |
+| :--- | :--- | :--- | :--- |
+| `/api/v1/admin/stats` | `GET` | Admin | Aggregated metrics, fleet valuation, active bookings & inquiries |
+| `/api/v1/vehicles` | `POST` | Admin | Register new vehicle into catalog |
+| `/api/v1/vehicles/:id` | `PATCH`, `PUT` | Admin | Update vehicle telemetry & pricing |
+| `/api/v1/vehicles/:id` | `DELETE` | Admin | Decommission and remove vehicle from catalog |
+| `/api/v1/brands` | `GET` | Public | Retrieve automotive marque directory |
+| `/api/v1/brands` | `POST` | Admin | Register new marque |
+| `/api/v1/brands/:id` | `PATCH`, `PUT` | Admin | Update marque details |
+| `/api/v1/brands/:id` | `DELETE` | Admin | Remove marque from directory |
+| `/api/v1/categories` | `GET` | Public | Retrieve chassis classification taxonomy |
+| `/api/v1/categories` | `POST` | Admin | Register new chassis classification |
+| `/api/v1/categories/:id` | `PATCH`, `PUT` | Admin | Update chassis category |
+| `/api/v1/categories/:id` | `DELETE` | Admin | Remove chassis category |
+| `/api/v1/services` | `POST` | Admin | Catalog new concierge maintenance program |
+| `/api/v1/services/:id` | `PATCH`, `PUT` | Admin | Update program specifications |
+| `/api/v1/services/:id` | `DELETE` | Admin | Decommission concierge program |
+| `/api/v1/dealers` | `POST` | Admin | Register new atelier showroom node |
+| `/api/v1/dealers/:id` | `PATCH`, `PUT` | Admin | Update showroom details & flagship status |
+| `/api/v1/dealers/:id` | `DELETE` | Admin | Decommission showroom from network |
+| `/api/v1/users` | `GET` | Admin | List all accredited accounts (members & directors) |
+| `/api/v1/users` | `POST` | Admin | Accredit and create new user profile |
+| `/api/v1/users/:id` | `DELETE` | Admin | Revoke credentials and delete account |
+| `/api/v1/bookings/:id/status` | `PATCH` | Admin | Update reservation status (Pending/Confirmed/Completed/Cancelled) |
+| `/api/v1/bookings/:id` | `DELETE` | Admin | Delete reservation from queue |
+| `/api/v1/contact` | `GET` | Admin | List inbound client inquiry transmissions |
+| `/api/v1/contact/:id` | `PATCH` | Admin | Update inquiry status (unread/read/archived) |
+| `/api/v1/contact/:id` | `DELETE` | Admin | Purge inquiry transmission |
+
