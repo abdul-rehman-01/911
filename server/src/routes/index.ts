@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import healthRoutes from './healthRoutes.ts';
+import authRoutes from './authRoutes.ts';
 import vehicleRoutes from './vehicleRoutes.ts';
 import brandRoutes from './brandRoutes.ts';
 import categoryRoutes from './categoryRoutes.ts';
@@ -15,6 +16,7 @@ const apiV1Router = Router();
 
 // Mount individual domain resources
 apiV1Router.use('/health', healthRoutes);
+apiV1Router.use('/auth', authRoutes);
 apiV1Router.use('/vehicles', vehicleRoutes);
 apiV1Router.use('/brands', brandRoutes);
 apiV1Router.use('/categories', categoryRoutes);

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { userController } from '../controllers/userController.ts';
-import { requireAdmin } from '../middleware/auth.ts';
+import { requireAdmin, requireOwnerOrAdmin } from '../middleware/auth.ts';
 
 const router = Router();
 
@@ -9,8 +9,8 @@ router.get('/', requireAdmin, userController.getAllUsers);
 router.post('/', requireAdmin, userController.createUser);
 router.delete('/:id', requireAdmin, userController.deleteUser);
 
-// User profile endpoints
-router.get('/:id', userController.getUserById);
-router.patch('/:id', userController.updateUser);
+// Protected user profile endpoints with anti-IDOR enforcement
+router.get('/:id', requireOwnerOrAdmin('id'), userController.getUserById);
+router.patch('/:id', requireOwnerOrAdmin('id'), userController.updateUser);
 
 export default router;

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { bookingBackendService } from '../services/bookingService.ts';
 import { sendSuccess, sendError } from '../utils/apiResponse.ts';
+import { validation } from '../schemas/validation.ts';
 
 export const bookingController = {
   async getBookings(req: Request, res: Response, next: NextFunction) {
@@ -81,6 +82,17 @@ export const bookingController = {
           statusCode: 400,
           code: 'MISSING_STATUS',
           message: 'Status parameter is required in request body.',
+        });
+      }
+
+      const statusVal = validation.validateBookingStatusUpdate(status);
+      if (!statusVal.isValid) {
+        return sendError({
+          res,
+          statusCode: 422,
+          code: 'VALIDATION_ERROR',
+          message: statusVal.errors[0]?.message || 'Invalid status enum value.',
+          details: statusVal.errors,
         });
       }
 

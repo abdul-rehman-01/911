@@ -157,6 +157,7 @@ export const Footer: React.FC<FooterProps> = ({
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="driver@car911.com"
+                  aria-label="Email address for dispatch telemetry updates"
                   className="bg-[#1e2024] text-white font-body text-xs px-3 py-2 rounded-sm border border-white/10 placeholder:text-[#39485a] focus:outline-none focus:border-[#e11d48] flex-1"
                   required
                 />

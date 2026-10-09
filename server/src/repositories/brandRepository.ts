@@ -71,8 +71,8 @@ export class BrandRepository {
     return found ? { ...found } : null;
   }
 
-  public async create(data: { name: string; country?: string; logoUrl?: string }): Promise<Brand> {
-    const id = data.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
+  public async create(data: { id?: string; name: string; country?: string; logoUrl?: string }): Promise<Brand> {
+    const id = data.id?.trim().toLowerCase() || data.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
     const newBrand: Brand = {
       id,
       name: data.name.trim(),

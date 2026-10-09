@@ -8,6 +8,7 @@ import {
   SessionState,
   ToastMessage,
   RoutePath,
+  UserProfile,
 } from '../types';
 import { MOCK_VEHICLES } from '../data/mockVehicles';
 import { MOCK_SERVICES } from '../data/mockServices';
@@ -17,6 +18,7 @@ import { vehicleService } from '../services/vehicleService';
 import { bookingService } from '../services/bookingService';
 import { authService } from '../services/authService';
 import { favoriteService } from '../services/favoriteService';
+import { apiClient } from '../services/apiClient';
 import {
   getStorageItem,
   setStorageItem,
@@ -496,6 +498,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       setSession(memberState);
       setStorageItem(STORAGE_KEYS.SESSION, memberState);
+
+      // Acquire signed JWT & HTTP-only session cookie from backend
+      apiClient.post<{ token: string; user: UserProfile }>('/auth/login', {
+        email: MOCK_USERS.member.email,
+        password: 'MemberPass2026!',
+      }).then((res) => {
+        if (res.data?.token) {
+          setSession((prev) => ({ ...prev, token: res.data?.token }));
+        }
+      }).catch(() => {});
+
       showToast({
         type: 'success',
         title: 'Authenticated: VIP Member',
@@ -509,6 +522,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       setSession(adminState);
       setStorageItem(STORAGE_KEYS.SESSION, adminState);
+
+      // Acquire signed JWT & HTTP-only session cookie from backend
+      apiClient.post<{ token: string; user: UserProfile }>('/auth/login', {
+        email: MOCK_USERS.admin.email,
+        password: 'AdminPass2026!',
+      }).then((res) => {
+        if (res.data?.token) {
+          setSession((prev) => ({ ...prev, token: res.data?.token }));
+        }
+      }).catch(() => {});
+
       showToast({
         type: 'warning',
         title: 'Authenticated: Platform Director (Admin)',
@@ -535,6 +559,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setSession(newSession);
     setStorageItem(STORAGE_KEYS.SESSION, newSession);
+
+    // Sync with backend to acquire signed token
+    apiClient.post<{ token: string; user: UserProfile }>('/auth/login', {
+      email,
+      password: password || (result.role === 'admin' ? 'AdminPass2026!' : 'MemberPass2026!'),
+    }).then((res) => {
+      if (res.data?.token) {
+        setSession((prev) => ({ ...prev, token: res.data?.token }));
+      }
+    }).catch(() => {});
 
     showToast({
       type: result.role === 'admin' ? 'warning' : 'success',
@@ -569,6 +603,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setSession(newSession);
     setStorageItem(STORAGE_KEYS.SESSION, newSession);
+
+    // Register on backend to issue token and persist with salted hash
+    apiClient.post<{ token: string; user: UserProfile }>('/auth/register', userData)
+      .then((res) => {
+        if (res.data?.token) {
+          setSession((prev) => ({ ...prev, token: res.data?.token }));
+        }
+      }).catch(() => {});
 
     showToast({
       type: 'success',
@@ -618,6 +660,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [session, showToast]);
 
   const logout = useCallback(() => {
+    // Notify backend to clear HTTP-only session cookie
+    apiClient.post('/auth/logout').catch(() => {});
+
     const guestState: SessionState = {
       role: 'guest',
       user: null,

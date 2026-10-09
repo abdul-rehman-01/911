@@ -170,6 +170,7 @@ export interface SessionState {
   role: AuthRole;
   user: UserProfile | null;
   isAuthenticated: boolean;
+  token?: string;
 }
 
 export interface VehicleFilterState {

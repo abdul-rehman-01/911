@@ -39,10 +39,15 @@ export class ApiError extends Error {
   }
 }
 
+const rawDefaultBaseUrl =
+  (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL)) ||
+  '/api/v1';
+const defaultBaseUrl = rawDefaultBaseUrl.replace(/\/+$/, '');
+
 export class ApiClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = '/api/v1') {
+  constructor(baseUrl: string = defaultBaseUrl) {
     this.baseUrl = baseUrl;
   }
 
@@ -54,7 +59,9 @@ export class ApiClient {
 
     try {
       const session = getStorageItem<SessionState | null>(STORAGE_KEYS.SESSION, null);
-      if (session?.user?.id) {
+      if (session?.token) {
+        headers['Authorization'] = `Bearer ${session.token}`;
+      } else if (session?.user?.id) {
         headers['x-user-id'] = session.user.id;
         headers['Authorization'] = `Bearer ${session.user.id}`;
       }
@@ -67,7 +74,9 @@ export class ApiClient {
 
   private buildUrl(path: string, params?: Record<string, any>): string {
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    const url = new URL(`${this.baseUrl}${cleanPath}`, window.location.origin);
+    const isAbsolute = this.baseUrl.startsWith('http://') || this.baseUrl.startsWith('https://');
+    const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'http://localhost:3000';
+    const url = isAbsolute ? new URL(`${this.baseUrl}${cleanPath}`) : new URL(`${this.baseUrl}${cleanPath}`, origin);
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -77,7 +86,7 @@ export class ApiClient {
       });
     }
 
-    return url.pathname + url.search;
+    return isAbsolute ? url.toString() : url.pathname + url.search;
   }
 
   public async get<T>(path: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
@@ -85,6 +94,7 @@ export class ApiClient {
       const response = await fetch(this.buildUrl(path, params), {
         method: 'GET',
         headers: this.getAuthHeaders(),
+        credentials: 'include',
       });
 
       const json = await response.json();
@@ -109,6 +119,7 @@ export class ApiClient {
       const response = await fetch(this.buildUrl(path), {
         method: 'POST',
         headers: this.getAuthHeaders(),
+        credentials: 'include',
         body: body !== undefined ? JSON.stringify(body) : undefined,
       });
 
@@ -134,6 +145,7 @@ export class ApiClient {
       const response = await fetch(this.buildUrl(path), {
         method: 'PUT',
         headers: this.getAuthHeaders(),
+        credentials: 'include',
         body: body !== undefined ? JSON.stringify(body) : undefined,
       });
 
@@ -159,6 +171,7 @@ export class ApiClient {
       const response = await fetch(this.buildUrl(path), {
         method: 'PATCH',
         headers: this.getAuthHeaders(),
+        credentials: 'include',
         body: body !== undefined ? JSON.stringify(body) : undefined,
       });
 
@@ -184,6 +197,7 @@ export class ApiClient {
       const response = await fetch(this.buildUrl(path), {
         method: 'DELETE',
         headers: this.getAuthHeaders(),
+        credentials: 'include',
       });
 
       const json = await response.json();

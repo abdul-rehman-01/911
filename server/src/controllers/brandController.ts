@@ -38,7 +38,7 @@ export const brandController = {
 
   async createBrand(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, country, logoUrl } = req.body;
+      const { id, name, country, logoUrl } = req.body;
       if (!name || typeof name !== 'string' || !name.trim()) {
         return sendError({
           res,
@@ -48,7 +48,7 @@ export const brandController = {
         });
       }
 
-      const brand = await brandRepository.create({ name, country, logoUrl });
+      const brand = await brandRepository.create({ id, name, country, logoUrl });
       return sendSuccess({
         res,
         statusCode: 201,

@@ -111,7 +111,7 @@ export const MOCK_SERVICES: Service[] = [
     name: 'Factory Scheduled Maintenance',
     category: 'Maintenance',
     shortDescription:
-      'OEM genuine parts, Motul motorsport lubricants, and certified dealer logbook service records.',
+      'OEM genuine parts, Motul motorsport lubricants, and comprehensive workshop logbook service records.',
     fullDescription:
       'Strict adherence to manufacturer service protocols using factory-specified tools, diagnostic computers, and certified fluids. Full logbook validation and digital service provenance recording for future resale value assurance.',
     icon: 'build',

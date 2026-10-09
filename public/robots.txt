@@ -1,0 +1,23 @@
+# Car 911 Robots Directive
+# Production Host: https://911-wheat.vercel.app
+
+User-agent: *
+Allow: /
+Allow: /explore-cars
+Allow: /vehicle-details
+Allow: /compare
+Allow: /services
+Allow: /dealers
+Allow: /about
+Allow: /contact
+
+# Disallow private user states, member dashboards & administrative control suites
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /dashboard
+Disallow: /favorites
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+
+Sitemap: https://911-wheat.vercel.app/sitemap.xml

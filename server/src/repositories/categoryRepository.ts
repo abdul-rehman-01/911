@@ -69,8 +69,8 @@ export class CategoryRepository {
     return found ? { ...found } : null;
   }
 
-  public async create(data: { name: string; description?: string }): Promise<Category> {
-    const id = data.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
+  public async create(data: { id?: string; name: string; description?: string }): Promise<Category> {
+    const id = data.id?.trim().toLowerCase() || data.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
     const newCat: Category = {
       id,
       name: data.name.trim(),

@@ -38,7 +38,7 @@ export const categoryController = {
 
   async createCategory(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, description } = req.body;
+      const { id, name, description } = req.body;
       if (!name || typeof name !== 'string' || !name.trim()) {
         return sendError({
           res,
@@ -48,7 +48,7 @@ export const categoryController = {
         });
       }
 
-      const category = await categoryRepository.create({ name, description });
+      const category = await categoryRepository.create({ id, name, description });
       return sendSuccess({
         res,
         statusCode: 201,
